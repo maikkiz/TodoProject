@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Alert, ScrollView, TextInput, Button } from 'react-native';
-import { ListItem } from 'react-native-elements';
+import { StyleSheet, Text, View, Alert, ScrollView } from 'react-native';
+import { ListItem, Input, Button } from 'react-native-elements';
+import Icon from 'react-native-vector-icons/EvilIcons';
 
 export default function App() {
 
@@ -8,20 +9,22 @@ export default function App() {
   const [description, setDescription] = useState('');
   const [due, setDue] = useState('');
   const [todos, setTodos] = useState([]);
+
+  const input1 = React.createRef();
+  const input2 = React.createRef();
+  const input3 = React.createRef();
   
   React.useEffect(() => { 
     fetchTodos()    
   }, []);
 
-  fetchTodos = () => {
+  const url = 'https://teknologiaserveri.herokuapp.com/api/v1/todos';
 
-    const url = 'https://teknologiaserveri.herokuapp.com/api/v1/todos';
+  fetchTodos = () => {
     fetch(url)
     .then((response) =>  response.json())
     .then((responseJson) =>  { 
       setTodos(responseJson);
-      console.log(responseJson);
-      console.log("testi");  
     })
     .catch((error) => { 
       Alert.alert('Error',  error); 
@@ -29,8 +32,8 @@ export default function App() {
   
   }
 
-  addTodo = () => {
-    fetch('https://teknologiaserveri.herokuapp.com/api/v1/todos', {
+  const addTodo = () => {
+    fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -44,37 +47,65 @@ export default function App() {
       .then(response => fetchTodos())
       .catch((error) => { 
         Alert.alert('Error',  error); 
-      }); 
+      });
+      input1.current.clear(); 
+      input2.current.clear(); 
+      input3.current.clear(); 
+    
+}
+
+const deleteTodo = (index) => {
+      fetch(url + '/' + index.toString(), {
+        method: "DELETE",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      .then(response => fetchTodos())
+      .catch((error) => { 
+        Alert.alert('Error',  error); 
+      });
+  
 }
 
   return (
     <View style={styles.container}>
-      <TextInput 
-        style={{fontSize:18, width: 200, borderColor: 'gray', borderWidth: 1}}
+      <Input 
+        placeholder='Aihe'
         onChangeText={title => setTitle(title)}
         value={title}
+        ref={input1}
       />
-      <TextInput 
-        style={{fontSize:18, width: 200, borderColor: 'gray', borderWidth: 1}}
+      <Input 
+        placeholder='Kuvaus'
         onChangeText={description => setDescription(description)}
         value={description}
+        ref={input2}
       />
-      <TextInput 
-        style={{fontSize:18, width: 200, borderColor: 'gray', borderWidth: 1}}
+      <Input 
+        placeholder='Deadline'
         onChangeText={due => setDue(due)}
         value={due}
+        ref={input3}
       />
 
       <Button onPress={addTodo} title=" Lisää " />
       <ScrollView>
       {
-      todos.map((todo, index) => (
+      todos.map((todo) => (
         <ListItem
-          key={index}
+          key={todo.id}
           title={todo.title}
           titleStyle={{fontSize: 20}}
-          subtitle={todo.description}
-          subtitleStyle={{fontSize: 20}}
+          subtitle={
+            <View>
+          <Text>{todo.description}</Text>
+          <Text>{todo.due}</Text>
+            </View>
+          }
+        //  subtitle={todo.description}
+          subtitleStyle={{fontSize: 15}}
+          rightIcon={<Icon name="close-o" color="red" size={30} onPress={() => deleteTodo(todo.id)}/> }
           bottomDivider
         />
       ))
